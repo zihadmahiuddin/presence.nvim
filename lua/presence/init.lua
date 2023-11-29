@@ -368,9 +368,16 @@ function Presence:get_discord_socket_path()
     local sock_path = nil
 
     if self.os.is_wsl then
-        -- Use socket created by relay for WSL
+        -- Use socket created by relay for WSL if it exists
         sock_path = "/var/run/"..sock_name
-    elseif self.os.name == "windows" then
+        -- If the file doesn't exist it returns nil
+        if vim.fn.getftype(sock_path) == "socket" then
+            -- If it does exist and is a socket, we just return this path, otherwise we go the normal route
+            return sock_path
+        end
+    end
+
+    if self.os.name == "windows" then
         -- Use named pipe in NPFS for Windows
         sock_path = [[\\.\pipe\]]..sock_name
     elseif self.os.name == "macos" then
